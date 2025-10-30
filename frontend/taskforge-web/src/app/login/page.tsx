@@ -5,10 +5,6 @@ import { signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
-// --- TaskForge brand snippets (you can replace /vercel.svg with /favicon.ico or your logo)
-const brandLogo = { name: "TaskForge", src: "/vercel.svg" };
-
-// --- Simple logo list (swap when you have real customers)
 const logos = [
   { name: "Sparkle Wash Co.", src: "/vercel.svg" },
   { name: "JetStream HVAC", src: "/vercel.svg" },
@@ -16,7 +12,6 @@ const logos = [
   { name: "NorthPeak Electric", src: "/vercel.svg" },
 ];
 
-// --- TaskForge-flavored testimonials
 const testimonials = [
   {
     name: "Ava C.",
@@ -38,7 +33,6 @@ const testimonials = [
   },
 ];
 
-// --- TaskForge strengths (FSM + AI + revenue focus)
 const features = [
   {
     title: "AI Lead Finder",
@@ -93,12 +87,12 @@ export default function LoginLandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Top Nav */}
+      {/* Navbar */}
       <header className="w-full border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image alt={brandLogo.name} src={brandLogo.src} width={24} height={24} />
-            <span className="font-semibold">TaskForge</span>
+            <Image alt="TaskForge" src="/vercel.svg" width={24} height={24} />
+            <span className="font-semibold text-lg">TaskForge</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <a href="#features" className="hover:underline">Features</a>
@@ -112,17 +106,17 @@ export default function LoginLandingPage() {
       {/* Hero + Login */}
       <section className="w-full">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16 grid lg:grid-cols-2 gap-10">
-          {/* Hero content */}
+          {/* Hero */}
           <div className="flex flex-col justify-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 w-max mb-4">
-              TaskForge for field service teams
+              Built for field service pros
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
               Run a tighter operation. Book more jobs. Get paid faster.
             </h1>
             <p className="mt-4 text-gray-600 text-base sm:text-lg">
-              TaskForge unifies leads, scheduling, job execution, and payments—plus an AI assistant that keeps work flowing,
-              not piling up.
+              TaskForge unifies leads, scheduling, job execution, and payments—plus an AI assistant
+              that keeps work flowing, not piling up.
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -140,7 +134,6 @@ export default function LoginLandingPage() {
               </a>
             </div>
 
-            {/* Product media placeholder */}
             <div className="mt-8 rounded-2xl border bg-white p-3">
               <div className="aspect-video w-full rounded-xl bg-gray-100 grid place-items-center text-gray-500">
                 TaskForge dashboard preview / video
@@ -194,7 +187,7 @@ export default function LoginLandingPage() {
                   <button
                     type="button"
                     className="text-gray-600 hover:underline"
-                    onClick={() => alert("Contact the owner to reset your password.")}
+                    onClick={() => alert("Contact admin to reset your password.")}
                   >
                     Forgot Password?
                   </button>
@@ -207,12 +200,6 @@ export default function LoginLandingPage() {
                 >
                   {submitting ? "Signing in..." : "Sign In"}
                 </button>
-
-                <p className="text-xs text-gray-500">
-                  By signing in you agree to our{" "}
-                  <a href="#" className="underline">Terms</a> and{" "}
-                  <a href="#" className="underline">Privacy Policy</a>.
-                </p>
               </form>
             </div>
           </div>
@@ -241,12 +228,6 @@ export default function LoginLandingPage() {
               </div>
             ))}
           </div>
-
-          <div className="mt-6 flex items-center gap-3 text-sm text-gray-600">
-            <span>Ratings on</span>
-            <span className="rounded-full border px-3 py-1">G2</span>
-            <span className="rounded-full border px-3 py-1">Capterra</span>
-          </div>
         </div>
       </section>
 
@@ -255,8 +236,7 @@ export default function LoginLandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <h2 className="text-2xl font-semibold">Everything you need to run & grow</h2>
           <p className="text-gray-600 mt-2">
-            Easier than legacy FSM suites. More scalable than “lightweight” apps. TaskForge is that happy middle—fast to adopt,
-            strong on ROI.
+            Easier than legacy FSM suites. More scalable than “lightweight” apps. TaskForge is that happy middle—fast to adopt, strong on ROI.
           </p>
 
           <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -266,27 +246,6 @@ export default function LoginLandingPage() {
                 <p className="text-sm text-gray-600 mt-2">{f.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ / Resources */}
-      <section id="faq" className="bg-white border-t">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-2xl font-semibold">Have questions?</h2>
-          <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a className="rounded-xl border p-5 hover:shadow-sm" href="#demo">
-              <h4 className="font-medium">Book a Demo</h4>
-              <p className="text-sm text-gray-600 mt-1">See TaskForge in action.</p>
-            </a>
-            <a className="rounded-xl border p-5 hover:shadow-sm" href="#">
-              <h4 className="font-medium">Pricing</h4>
-              <p className="text-sm text-gray-600 mt-1">Simple, transparent plans.</p>
-            </a>
-            <a className="rounded-xl border p-5 hover:shadow-sm" href="#">
-              <h4 className="font-medium">Case Studies</h4>
-              <p className="text-sm text-gray-600 mt-1">Results from teams like yours.</p>
-            </a>
           </div>
         </div>
       </section>
