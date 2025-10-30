@@ -1,26 +1,45 @@
-import NextAuth, { type NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-      // You can add `allowDangerousEmailAccountLinking: true` if needed for merging accounts by email in dev.
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const adminUser = process.env.ADMIN_USERNAME;
+        const adminPass = process.env.ADMIN_PASSWORD;
+
+        if (
+          credentials?.username === adminUser &&
+          credentials?.password === adminPass
+        ) {
+          // ✅ Authenticated successfully
+          return {
+            id: "1",
+            name: "TaskForge Admin",
+            username: adminUser,
+          };
+        }
+
+        // ❌ Invalid credentials
+        return null;
+      },
     }),
   ],
-  pages: {
-    signIn: "/login",
-  },
+
   session: {
     strategy: "jwt",
   },
-  callbacks: {
-    async signIn({ user }) {
-      // Add your domain allow-list or custom logic here if desired
-      return !!user?.email;
-    },
+
+  pages: {
+    signIn: "/login", // custom login page
   },
+
   secret: process.env.NEXTAUTH_SECRET,
 };
 
