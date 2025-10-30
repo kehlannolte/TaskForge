@@ -1,0 +1,67 @@
+/* ----------------------------------------------------
+   Global Tailwind Styles – TaskForge
+   ---------------------------------------------------- */
+
+/* ✅ Import TailwindCSS (required for v4)
+   This replaces @tailwind base/components/utilities */
+@import "tailwindcss";
+
+/* ----------------------------------------------------
+   Global resets & typography
+   ---------------------------------------------------- */
+
+html, body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ----------------------------------------------------
+   Reusable components
+   ---------------------------------------------------- */
+
+/* ✅ Buttons */
+.btn {
+  @apply inline-flex items-center justify-center rounded-md
+    bg-blue-600 px-4 py-2 text-sm font-medium text-white
+    hover:bg-blue-700 focus:outline-none focus:ring-2
+    focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* ✅ Secondary button */
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-md
+    bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900
+    hover:bg-gray-300 focus:outline-none focus:ring-2
+    focus:ring-gray-400 focus:ring-offset-2;
+}
+
+/* ✅ Cards / containers */
+.card {
+  @apply rounded-md bg-white p-6 shadow-md;
+}
+
+/* ✅ Headings */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold text-gray-900;
+}
+
+h1 { @apply text-3xl; }
+h2 { @apply text-2xl; }
+h3 { @apply text-xl; }
+
+/* ✅ Links */
+a {
+  @apply text-blue-600 hover:underline;
+}
+
+/* ----------------------------------------------------
+   Utility overrides / misc
+   ---------------------------------------------------- */
+
+.container {
+  @apply mx-auto max-w-7xl px-4;
+}

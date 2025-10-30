@@ -1,0 +1,20 @@
+{
+  "name": "taskforge",
+  "private": true,
+  "workspaces": [
+    "frontend/taskforge-web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w frontend/taskforge-web",
+    "build": "npm run build -w frontend/taskforge-web",
+    "start": "npm run start -w frontend/taskforge-web"
+  },
+  "dependencies": {
+    "@auth/core": "^0.34.3",
+    "next-auth": "^4.24.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "@types/react": "^19.2.2"
+  }
+}

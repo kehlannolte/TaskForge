@@ -1,0 +1,29 @@
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# Python
+**/.venv/
+**/__pycache__/
+*.pyc
+
+# OS / Editors
+.DS_Store
+*.log
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+frontend/taskforge-web/.env.local
+backend/.env
+backend/.env.*
+
+# App artifacts
+backend/taskforge.db
+
+# Vercel
+.vercel/
+frontend/taskforge-web/env.local
