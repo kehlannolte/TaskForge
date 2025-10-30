@@ -1,50 +1,67 @@
-import { NextResponse } from "next/server";
-import { deleteJob, getJob, updateJob, type Job } from "@/lib/store";
+import { NextRequest, NextResponse } from 'next/server';
 
-type Params = { params: { id: string } };
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8000';
 
-export const dynamic = "force-dynamic";
+type Job = {
+  id: string;
+  [key: string]: any;
+};
 
-// GET /api/jobs/:id -> Job
-export async function GET(_req: Request, { params }: Params) {
-  const job = getJob(params.id);
-  if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(job);
-}
-
-// PUT /api/jobs/:id -> Job
-export async function PUT(req: Request, { params }: Params) {
+async function proxy<T = unknown>(
+  method: 'GET' | 'PUT' | 'DELETE',
+  id: string,
+  body?: unknown
+): Promise<NextResponse<T | { error: string }>> {
   try {
-    const body = (await req.json()) as Partial<Job>;
-    const patch: Partial<Job> = {};
+    const res = await fetch(`${API_BASE}/jobs/${id}`, {
+      method,
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      // Pass cookies/headers along if you need auth later:
+      // credentials: 'include',
+      // next: { revalidate: 0 },
+    });
 
-    if (typeof body.title === "string") {
-      const t = body.title.trim();
-      if (!t) return NextResponse.json({ error: "Title is required" }, { status: 400 });
-      patch.title = t;
+    const isJSON = res.headers.get('content-type')?.includes('application/json');
+    const data = isJSON ? await res.json() : undefined;
+
+    if (!res.ok) {
+      const message = (data as any)?.error || `Upstream error (${res.status})`;
+      return NextResponse.json({ error: message }, { status: res.status });
     }
 
-    if (typeof body.notes === "string") {
-      patch.notes = body.notes.trim() || undefined;
-    }
-
-    if (body.status) {
-      if (!["New", "In Progress", "Done"].includes(body.status))
-        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-      patch.status = body.status;
-    }
-
-    const updated = updateJob(params.id, patch);
-    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(updated);
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json(data as T);
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message ?? 'Unknown error' }, { status: 500 });
   }
 }
 
-// DELETE /api/jobs/:id -> { ok: true }
-export async function DELETE(_req: Request, { params }: Params) {
-  const ok = deleteJob(params.id);
-  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ ok: true });
+// Note: Vercel/Next 16 build types expect `context.params` to be a Promise
+// so we `await` it and then read `id`.
+
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  return proxy<Job>('GET', id);
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  const body = await request.json();
+  return proxy<Job>('PUT', id, body);
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  return proxy('DELETE', id);
 }
