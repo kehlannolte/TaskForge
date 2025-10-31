@@ -1,35 +1,34 @@
-import { NextResponse } from "next/server";
-import { createJob, listJobs, type Job } from "@/lib/store";
+import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic"; // ensure fresh data in dev
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
-// GET /api/jobs -> { jobs: Job[] }
 export async function GET() {
-  const jobs = listJobs();
-  return NextResponse.json({ jobs });
-}
-
-// POST /api/jobs -> Job
-export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as Partial<Job>;
-    const title = (body.title ?? "").toString().trim();
-    const status = (body.status as Job["status"]) ?? "New";
-    const notes = (body.notes ?? "").toString().trim();
-
-    if (!title) {
-      return NextResponse.json({ error: "Title is required" }, { status: 400 });
-    }
-    if (!["New", "In Progress", "Done"].includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-    }
-
-    const job = createJob({ title, status, notes: notes || undefined });
-    return NextResponse.json(job, { status: 201 });
+    const res = await fetch(`${API_BASE}/jobs`, { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
   } catch (e) {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
+      { error: "Backend unavailable", detail: String(e) },
+      { status: 502 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const res = await fetch(`${API_BASE}/jobs`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
+  } catch (e) {
+    return NextResponse.json(
+      { error: "Backend unavailable", detail: String(e) },
+      { status: 502 }
     );
   }
 }

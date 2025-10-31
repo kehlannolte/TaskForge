@@ -1,48 +1,45 @@
+cat > src/app/api/auth/[...nextauth]/route.ts <<'TS'
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { NextAuthOptions } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { NextResponse } from "next/server";
 
-export const authOptions: NextAuthOptions = {
+const handler = NextAuth({
+  session: { strategy: "jwt" },
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: "Credentials",
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        const adminUser = process.env.ADMIN_USERNAME;
-        const adminPass = process.env.ADMIN_PASSWORD;
+      async authorize(creds) {
+        const u = creds?.username ?? "";
+        const p = creds?.password ?? "";
+        const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
-        if (
-          credentials?.username === adminUser &&
-          credentials?.password === adminPass
-        ) {
-          // ✅ Authenticated successfully
-          return {
-            id: "1",
-            name: "TaskForge Admin",
-            username: adminUser,
-          };
+        if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
+          return { id: "admin-1", name: "TaskForge Admin", email: "admin@taskforge.local" };
         }
-
-        // ❌ Invalid credentials
         return null;
       },
     }),
   ],
-
-  session: {
-    strategy: "jwt",
-  },
-
   pages: {
-    signIn: "/login", // custom login page
+    signIn: "/login",
   },
-
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.role = "admin";
+      return token;
+    },
+    async session({ session, token }) {
+      (session as any).role = token.role;
+      return session;
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
-};
-
-const handler = NextAuth(authOptions);
+});
 
 export { handler as GET, handler as POST };
+TS

@@ -1,42 +1,28 @@
 "use client";
-import { useSession, signOut } from "next-auth/react";
+
 import Link from "next/link";
-// ... your existing imports
+import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function NavBar() {
   const { data: session } = useSession();
-  const loggedIn = !!session;
-
   return (
-    <nav className="border-b bg-white">
-      <div className="container flex items-center justify-between py-3">
-        <Link href="/" className="font-semibold">TaskForge</Link>
-
-        <div className="flex gap-4">
-          {loggedIn && (
-            <>
-              <Link href="/dashboard">Dashboard</Link>
-              <Link href="/jobs">Jobs</Link>
-              <Link href="/leads">Leads</Link>
-              <Link href="/find-lead">Find Lead</Link>
-              <Link href="/payments">Payments</Link>
-              <Link href="/settings">Settings</Link>
-            </>
-          )}
-
-          {!loggedIn ? (
-            <Link href="/login" className="rounded-md border px-3 py-1.5 text-sm">
-              Login
-            </Link>
-          ) : (
+    <nav className="flex items-center justify-between px-4 py-3 border-b bg-white">
+      <Link href="/" className="font-semibold">TaskForge</Link>
+      <div className="flex items-center gap-3">
+        {session ? (
+          <>
+            <Link href="/dashboard" className="text-sm">Dashboard</Link>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="rounded-md border px-3 py-1.5 text-sm"
+              className="text-sm underline"
             >
-              Logout
+              Sign out
             </button>
-          )}
-        </div>
+          </>
+        ) : (
+          <Link href="/login" className="text-sm underline">Sign in</Link>
+        )}
       </div>
     </nav>
   );
