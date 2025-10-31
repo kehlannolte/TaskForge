@@ -1,34 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
-export async function GET() {
+export async function GET(_req: NextRequest) {
+  // list jobs
   try {
     const res = await fetch(`${API_BASE}/jobs`, { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return NextResponse.json({ error: "Failed to list jobs" }, { status: res.status });
+    }
+    const data = await res.json();
     return NextResponse.json(data, { status: res.status });
-  } catch (e) {
-    return NextResponse.json(
-      { error: "Backend unavailable", detail: String(e) },
-      { status: 502 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Upstream error" }, { status: 502 });
   }
 }
 
 export async function POST(req: NextRequest) {
+  // create job
+  const body = await req.json().catch(() => ({}));
   try {
-    const body = await req.json();
     const res = await fetch(`${API_BASE}/jobs`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
-    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return NextResponse.json({ error: "Failed to create job" }, { status: res.status });
+    }
+    const data = await res.json();
     return NextResponse.json(data, { status: res.status });
-  } catch (e) {
-    return NextResponse.json(
-      { error: "Backend unavailable", detail: String(e) },
-      { status: 502 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Upstream error" }, { status: 502 });
   }
 }

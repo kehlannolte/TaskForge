@@ -1,10 +1,12 @@
-cat > src/app/api/auth/[...nextauth]/route.ts <<'TS'
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { NextResponse } from "next/server";
 
-const handler = NextAuth({
+export const {
+  handlers: { GET, POST },
+  auth,
+} = NextAuth({
   session: { strategy: "jwt" },
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     Credentials({
       name: "Credentials",
@@ -13,33 +15,16 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(creds) {
-        const u = creds?.username ?? "";
-        const p = creds?.password ?? "";
-        const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
-
-        if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
-          return { id: "admin-1", name: "TaskForge Admin", email: "admin@taskforge.local" };
-        }
-        return null;
+        const u = process.env.CREDENTIALS_USERNAME;
+        const p = process.env.CREDENTIALS_PASSWORD;
+        if (!u || !p) return null;
+        const ok =
+          creds?.username?.toString() === u &&
+          creds?.password?.toString() === p;
+        if (!ok) return null;
+        return { id: "user-1", name: "TaskForge Admin", email: "owner@taskforge.local" };
       },
     }),
   ],
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) token.role = "admin";
-      return token;
-    },
-    async session({ session, token }) {
-      (session as any).role = token.role;
-      return session;
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
+  pages: { signIn: "/login" },
 });
-
-export { handler as GET, handler as POST };
-TS

@@ -1,208 +1,155 @@
-"use client";
+import { Suspense } from "react";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { get } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
+const APP_URL =
+  process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
 
 type Job = {
-  id: string;
-  title: string;
-  status: "New" | "In Progress" | "Done";
+  id?: string | number;
+  title?: string;
+  name?: string;
+  customer?: string;
+  status?: string;
+  amount?: number;
+  total?: number;
+  price?: number;
   createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
 };
 
-type Lead = {
-  id: string;
-  name: string;
-  status: "New" | "Contacted" | "Qualified" | "Lost";
-  createdAt?: string;
-};
+async function getJobs(): Promise<Job[]> {
+  const res = await fetch(`${APP_URL}/api/jobs`, { cache: "no-store" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : Array.isArray(data?.jobs) ? data.jobs : [];
+}
 
-type JobsResponse = { jobs: Job[] };
-type LeadsResponse = { leads: Lead[] };
-
-export default function DashboardPage() {
-  const { show } = useToast();
-
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  async function load() {
-    try {
-      setLoading(true);
-      const [jobsRes, leadsRes] = await Promise.all([
-        get<JobsResponse>("/api/jobs"),
-        get<LeadsResponse>("/api/leads"),
-      ]);
-      setJobs(jobsRes.jobs ?? []);
-      setLeads(leadsRes.leads ?? []);
-    } catch {
-      show("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
+function formatCurrency(n: number) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
+  } catch {
+    return `$${Math.round(n)}`;
   }
+}
 
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+function jobAmount(job: Job): number {
+  if (typeof job.total === "number") return job.total;
+  if (typeof job.amount === "number") return job.amount;
+  if (typeof job.price === "number") return job.price;
+  return 0;
+}
 
-  // --- Derived stats ---
-  const jobCounts = useMemo(() => {
-    const total = jobs.length;
-    const byStatus = {
-      New: jobs.filter((j) => j.status === "New").length,
-      "In Progress": jobs.filter((j) => j.status === "In Progress").length,
-      Done: jobs.filter((j) => j.status === "Done").length,
-    };
-    return { total, ...byStatus };
-  }, [jobs]);
-
-  const leadCounts = useMemo(() => {
-    const total = leads.length;
-    const byStatus = {
-      New: leads.filter((l) => l.status === "New").length,
-      Contacted: leads.filter((l) => l.status === "Contacted").length,
-      Qualified: leads.filter((l) => l.status === "Qualified").length,
-      Lost: leads.filter((l) => l.status === "Lost").length,
-    };
-    return { total, ...byStatus };
-  }, [leads]);
-
-  const recentJobs = useMemo(
-    () =>
-      [...jobs]
-        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
-        .slice(0, 5),
-    [jobs]
+function jobTitle(job: Job): string {
+  return (
+    (typeof job.title === "string" && job.title) ||
+    (typeof job.name === "string" && job.name) ||
+    (typeof job.customer === "string" && job.customer) ||
+    `Job ${job.id ?? ""}`.trim()
   );
+}
 
-  const recentLeads = useMemo(
-    () =>
-      [...leads]
-        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
-        .slice(0, 5),
-    [leads]
-  );
+export default async function DashboardPage() {
+  const jobs = await getJobs();
+
+  const totalRevenue = jobs.reduce((sum, j) => sum + jobAmount(j), 0);
+  const totalJobs = jobs.length;
+  const completedJobs = jobs.filter(
+    (j) =>
+      typeof j.status === "string" &&
+      ["done", "completed", "complete"].includes(j.status.toLowerCase())
+  ).length;
+
+  const recent = jobs
+    .slice()
+    .sort((a, b) => {
+      const aT = Date.parse(a.updatedAt ?? a.createdAt ?? "0");
+      const bT = Date.parse(b.updatedAt ?? b.createdAt ?? "0");
+      return bT - aT;
+    })
+    .slice(0, 8);
 
   return (
-    <main className="container mx-auto px-4 py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-semibold text-blue-600">Dashboard</h1>
-        <button
-          className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
-          onClick={() => void load()}
-        >
-          Refresh
-        </button>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow">
+          <div className="text-sm text-gray-500">Total Revenue</div>
+          <div className="mt-1 text-3xl font-bold">{formatCurrency(totalRevenue)}</div>
+          <div className="mt-2 text-xs text-gray-400">Sum of amounts across all jobs</div>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow">
+          <div className="text-sm text-gray-500">Jobs</div>
+          <div className="mt-1 text-3xl font-bold">{totalJobs}</div>
+          <div className="mt-2 text-xs text-gray-400">Total jobs in the system</div>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow">
+          <div className="text-sm text-gray-500">Completed</div>
+          <div className="mt-1 text-3xl font-bold">{completedJobs}</div>
+          <div className="mt-2 text-xs text-gray-400">Jobs marked as done/completed</div>
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="card">
-          <p className="text-sm text-gray-500">Total Jobs</p>
-          <p className="text-2xl font-semibold">{jobCounts.total}</p>
-          <div className="mt-2 text-xs text-gray-500">
-            New {jobCounts["New"]} • In Progress {jobCounts["In Progress"]} • Done {jobCounts["Done"]}
+      <div className="rounded-2xl border border-gray-200 bg-white shadow">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-lg font-medium">Recent Jobs</h2>
+        </div>
+
+        <Suspense>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left">
+              <thead className="text-xs uppercase text-gray-500">
+                <tr className="[&>th]:px-5 [&>th]:py-3">
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th className="text-right">Amount</th>
+                  <th className="text-right">Updated</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {recent.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-6 text-center text-gray-500">
+                      No jobs yet.
+                    </td>
+                  </tr>
+                ) : (
+                  recent.map((j) => {
+                    const amt = jobAmount(j);
+                    const updated = j.updatedAt ?? j.createdAt;
+                    const when =
+                      updated && !Number.isNaN(Date.parse(updated))
+                        ? new Date(updated).toLocaleDateString()
+                        : "—";
+                    return (
+                      <tr key={`${j.id ?? Math.random()}`} className="[&>td]:px-5 [&>td]:py-3">
+                        <td className="text-gray-700">{String(j.id ?? "—")}</td>
+                        <td className="font-medium text-gray-900">{jobTitle(j)}</td>
+                        <td>
+                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs">
+                            {j.status ?? "—"}
+                          </span>
+                        </td>
+                        <td className="text-right font-medium">
+                          {amt ? formatCurrency(amt) : "—"}
+                        </td>
+                        <td className="text-right text-gray-600">{when}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-          <Link href="/jobs" className="mt-3 inline-block text-sm text-blue-600 hover:underline">
-            View Jobs →
-          </Link>
-        </div>
-
-        <div className="card">
-          <p className="text-sm text-gray-500">Total Leads</p>
-          <p className="text-2xl font-semibold">{leadCounts.total}</p>
-          <div className="mt-2 text-xs text-gray-500">
-            New {leadCounts["New"]} • Contacted {leadCounts["Contacted"]} • Qualified {leadCounts["Qualified"]} • Lost {leadCounts["Lost"]}
-          </div>
-          <Link href="/leads" className="mt-3 inline-block text-sm text-blue-600 hover:underline">
-            View Leads →
-          </Link>
-        </div>
-
-        <div className="card">
-          <p className="text-sm text-gray-500">Open Jobs</p>
-          <p className="text-2xl font-semibold">{jobCounts["New"] + jobCounts["In Progress"]}</p>
-          <p className="mt-2 text-xs text-gray-500">Jobs not marked Done</p>
-        </div>
-
-        <div className="card">
-          <p className="text-sm text-gray-500">Active Pipeline</p>
-          <p className="text-2xl font-semibold">{leadCounts["New"] + leadCounts["Contacted"] + leadCounts["Qualified"]}</p>
-          <p className="mt-2 text-xs text-gray-500">Leads not Lost</p>
-        </div>
-      </section>
-
-      {/* Recent Lists */}
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="card">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Recent Jobs</h2>
-            <Link href="/jobs" className="text-sm text-blue-600 hover:underline">See all</Link>
-          </div>
-          {loading ? (
-            <p className="text-sm text-gray-500">Loading…</p>
-          ) : recentJobs.length === 0 ? (
-            <p className="text-sm text-gray-500">No jobs yet.</p>
-          ) : (
-            <ul className="divide-y">
-              {recentJobs.map((j) => (
-                <li key={j.id} className="flex items-center justify-between py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">{j.title}</p>
-                    <p className="text-xs text-gray-500">
-                      {j.status}
-                      {j.createdAt ? ` • ${new Date(j.createdAt).toLocaleString()}` : ""}
-                    </p>
-                  </div>
-                  <Link
-                    href="/jobs"
-                    className="shrink-0 rounded-md border px-3 py-1.5 text-xs hover:bg-gray-50"
-                  >
-                    Manage
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="card">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Recent Leads</h2>
-            <Link href="/leads" className="text-sm text-blue-600 hover:underline">See all</Link>
-          </div>
-          {loading ? (
-            <p className="text-sm text-gray-500">Loading…</p>
-          ) : recentLeads.length === 0 ? (
-            <p className="text-sm text-gray-500">No leads yet.</p>
-          ) : (
-            <ul className="divide-y">
-              {recentLeads.map((l) => (
-                <li key={l.id} className="flex items-center justify-between py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">{l.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {l.status}
-                      {l.createdAt ? ` • ${new Date(l.createdAt).toLocaleString()}` : ""}
-                    </p>
-                  </div>
-                  <Link
-                    href="/leads"
-                    className="shrink-0 rounded-md border px-3 py-1.5 text-xs hover:bg-gray-50"
-                  >
-                    Manage
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-    </main>
+        </Suspense>
+      </div>
+    </div>
   );
 }
