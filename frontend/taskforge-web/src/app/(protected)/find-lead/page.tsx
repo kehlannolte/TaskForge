@@ -1,14 +1,40 @@
+"use client";
+import { useEffect, useState } from "react";
+
+type Prospect = { id: string; name: string; phone: string; service: string; city: string; };
+
 export default function FindLeadPage() {
+  const [items, setItems] = useState<Prospect[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/find-lead");
+      setItems(await res.json());
+    })();
+  }, []);
+
   return (
-    <main className="container mx-auto px-4 py-10">
-      <h1 className="text-3xl font-semibold mb-4 text-blue-600">Find Lead</h1>
-      <p className="text-gray-700 mb-4">
-        Use this page to search for and discover new business leads.
-        You’ll be able to filter by industry, location, or engagement level in a future release.
-      </p>
-      <div className="rounded-md bg-gray-100 p-6 text-gray-500">
-        🔍 Lead-finding tools coming soon.
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold">Find a Lead</h1>
+      <p className="text-gray-600">Pre-filtered local job requests (demo data).</p>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {items.map(i => (
+          <div key={i.id} className="rounded-lg border bg-white p-4">
+            <div className="font-medium">{i.name}</div>
+            <div className="text-sm text-gray-600">{i.service} • {i.city}</div>
+            <div className="mt-2 text-sm">{i.phone}</div>
+            <div className="mt-3 flex gap-2">
+              <button className="rounded-md border px-3 py-1">Call</button>
+              <button className="rounded-md border px-3 py-1">Text</button>
+              <button className="rounded-md border px-3 py-1">Save Lead</button>
+            </div>
+          </div>
+        ))}
+        {items.length === 0 && (
+          <div className="text-gray-500">No prospects yet.</div>
+        )}
       </div>
-    </main>
+    </div>
   );
 }

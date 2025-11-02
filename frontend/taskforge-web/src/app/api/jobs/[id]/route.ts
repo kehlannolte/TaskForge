@@ -1,53 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { db, JobStatus } from "@/lib/db";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
-
-// GET /api/jobs/[id]
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-  try {
-    const res = await fetch(`${API_BASE}/jobs/${id}`, { cache: "no-store" });
-    if (!res.ok) {
-      return NextResponse.json({ error: "Failed to fetch job" }, { status: res.status });
-    }
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "Upstream error" }, { status: 502 });
-  }
+  const job = db.jobs.get(params.id);
+  if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(job);
 }
 
-// PUT /api/jobs/[id]
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-  const body = await req.json();
-  try {
-    const res = await fetch(`${API_BASE}/jobs/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      return NextResponse.json({ error: "Failed to update job" }, { status: res.status });
-    }
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "Upstream error" }, { status: 502 });
+  const patch = await req.json();
+  const allowed: (keyof typeof patch)[] = ["title", "customer", "price", "status"];
+  const clean: any = {};
+  for (const k of allowed) if (k in patch) clean[k] = patch[k];
+
+  if (clean.status && !["active","complete","paid"].includes(clean.status as JobStatus)) {
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
+
+  const updated = db.jobs.update(params.id, clean);
+  return NextResponse.json(updated);
 }
 
-// DELETE /api/jobs/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-  try {
-    const res = await fetch(`${API_BASE}/jobs/${id}`, { method: "DELETE", cache: "no-store" });
-    if (!res.ok) {
-      return NextResponse.json({ error: "Failed to delete job" }, { status: res.status });
-    }
-    return NextResponse.json({}, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "Upstream error" }, { status: 502 });
-  }
+  const exists = db.jobs.get(params.id);
+  if (!exists) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // simple remove
+  (db as any)._jobs = db.jobs.list().filter(j => j.id !== params.id);
+  return NextResponse.json({});
 }
