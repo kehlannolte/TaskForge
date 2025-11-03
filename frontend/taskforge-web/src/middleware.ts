@@ -5,9 +5,7 @@ export const config = {
     "/dashboard/:path*",
     "/jobs/:path*",
     "/leads/:path*",
-    "/assistant/:path*",
     "/find-lead/:path*",
     "/payments/:path*",
-    "/settings/:path*",
   ],
 };

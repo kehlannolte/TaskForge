@@ -1,11 +1,11 @@
-// src/app/(protected)/layout.tsx
-import { ReactNode } from "react";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
+import NavBar from "@/components/NavBar";
 
-export default async function ProtectedLayout({ children }: { children: ReactNode }) {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect(`/login?callbackUrl=${encodeURIComponent("/dashboard")}`);
-  return <>{children}</>;
+export default function ProtectedLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <NavBar />
+      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+    </div>
+  );
 }
