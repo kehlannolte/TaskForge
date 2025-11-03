@@ -1,17 +1,17 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
+  const [showAuth, setShowAuth] = useState(false);
   const sp = useSearchParams();
   const callbackUrl = useMemo(() => sp.get("callbackUrl") || "/dashboard", [sp]);
-  const [showAuth, setShowAuth] = useState(false);
 
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-50 via-white to-slate-50">
-      {/* soft background blobs */}
+      {/* bg accents */}
       <div className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_60%_at_50%_40%,black,transparent)]">
         <div className="absolute -top-32 -right-24 h-80 w-80 rounded-full bg-blue-100 blur-3xl opacity-50" />
         <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-indigo-100 blur-3xl opacity-50" />
@@ -31,34 +31,25 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="rounded-2xl border bg-white/80 p-6 shadow-sm backdrop-blur">
-          <h2 className="text-lg font-medium">Sign in</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Use your Google account to access your dashboard.
-          </p>
-
-          {/* Step 1: single Login button */}
-          {!showAuth && (
-            <div className="mt-6">
+          {!showAuth ? (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="w-full rounded-xl px-4 py-3 font-medium bg-black text-white hover:bg-gray-900 active:scale-[.99] transition"
+              aria-label="Open sign-in options"
+            >
+              Login
+            </button>
+          ) : (
+            <div className="space-y-3">
               <button
                 onClick={() => signIn("google", { callbackUrl })}
-                className="w-full rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white shadow hover:shadow-md active:scale-[.99] transition"
-              >
-                Login
-              </button>
-            </div>
-          )}
-
-          {/* Step 2: reveal “Continue with Google” */}
-          {showAuth && (
-            <div className="mt-4 animate-in fade-in slide-in-from-top-1">
-              <button
-                onClick={() => signIn("google", { callbackUrl })}
-                className="w-full inline-flex items-center justify-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-medium hover:bg-gray-50 active:scale-[.99] transition"
+                className="w-full inline-flex items-center justify-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-medium bg-black text-white hover:bg-gray-900 active:scale-[.99] transition"
+                aria-label="Continue with Google"
               >
                 <svg
                   aria-hidden
                   viewBox="0 0 24 24"
-                  className="h-5 w-5"
+                  className="h-5 w-5 bg-white rounded-sm"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
@@ -71,24 +62,20 @@ export default function LoginPage() {
 
               <button
                 onClick={() => setShowAuth(false)}
-                className="mt-3 w-full text-xs text-gray-500 underline"
+                className="w-full rounded-xl border px-4 py-2.5 text-sm font-medium hover:bg-gray-50"
+                aria-label="Go back"
               >
-                Back
+                ◀ Back
               </button>
             </div>
           )}
 
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-500">
-              By continuing you agree to our <a className="underline" href="#">Terms</a> and{" "}
-              <a className="underline" href="#">Privacy</a>.
-            </p>
-          </div>
+          <p className="mt-4 text-center text-xs text-gray-500">
+            By continuing, you agree to our{" "}
+            <a href="#" className="underline">Terms</a> and{" "}
+            <a href="#" className="underline">Privacy</a>.
+          </p>
         </div>
-
-        <p className="mt-6 text-center text-xs text-gray-500">
-          Having trouble? <a className="underline" href="#">Contact support</a>
-        </p>
       </div>
     </div>
   );
