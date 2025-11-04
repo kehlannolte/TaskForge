@@ -9,6 +9,50 @@ export default function LoginClient() {
   const params = useSearchParams();
   const error = params.get("error");
 
+  // 🔒 Full-screen Unauthorized overlay
+  if (error === "AccessDenied") {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-gray-100">
+        {/* Top bar */}
+        <div className="bg-white/90 backdrop-blur border-b">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Image src="/logo.png" alt="TaskForge" width={28} height={28} className="rounded" />
+              <span className="font-semibold text-gray-800">TaskForge</span>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              Back to Login
+            </Link>
+          </div>
+        </div>
+
+        {/* Centered message */}
+        <div className="flex-1 grid place-items-center">
+          <div className="text-center px-4">
+            <div className="text-2xl font-semibold text-gray-800">
+              Unauthorized access — nice try, buddy 😎
+            </div>
+            <p className="text-gray-600 mt-2">
+              This account isn’t allowed to access TaskForge.
+              <br />
+              If you think this is a mistake, contact the admin.
+            </p>
+            <Link
+              href="/login"
+              className="mt-6 inline-flex items-center rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Back to Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Normal login page
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top bar */}
@@ -92,7 +136,7 @@ export default function LoginClient() {
                 </div>
               </div>
 
-              {/* Auth error (AccessDenied) */}
+              {/* Inline Auth error (still shows below hero) */}
               {error === "AccessDenied" && (
                 <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                   Unauthorized access, nice try buddy 😎
@@ -218,7 +262,10 @@ export default function LoginClient() {
             <p className="text-gray-600 mt-2">Works great alongside your favorite tools.</p>
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6 items-center">
               {["QuickBooks", "Stripe", "Google", "Twilio", "Zapier", "Mailchimp"].map((name) => (
-                <div key={name} className="rounded-lg border bg-white p-4 text-center text-sm text-gray-700">
+                <div
+                  key={name}
+                  className="rounded-lg border bg-white p-4 text-center text-sm text-gray-700"
+                >
                   {name}
                 </div>
               ))}
@@ -267,7 +314,11 @@ export default function LoginClient() {
           <div>
             <h4 className="font-semibold">Company</h4>
             <ul className="mt-3 space-y-2 text-gray-600">
-              <li><a href="#features" className="hover:underline">Our Story</a></li>
+              <li>
+                <a href="#features" className="hover:underline">
+                  Our Story
+                </a>
+              </li>
               <li>Our Team</li>
               <li>Careers</li>
               <li>Contact</li>
@@ -280,8 +331,12 @@ export default function LoginClient() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 text-xs text-gray-500 flex items-center justify-between">
             <span>© {new Date().getFullYear()} TaskForge</span>
             <div className="flex items-center gap-4">
-              <a href="#" className="hover:underline">Privacy</a>
-              <a href="#" className="hover:underline">Terms</a>
+              <a href="#" className="hover:underline">
+                Privacy
+              </a>
+              <a href="#" className="hover:underline">
+                Terms
+              </a>
             </div>
           </div>
         </div>
